@@ -12,11 +12,11 @@ starting_xp = 4111
 current_xp = starting_xp
 
 def check():
-  if imagesearch("./populating.png")[0] != -1:
+  if imagesearch("images/populating.png")[0] != -1:
     print("waiting for show to start")
     time.sleep(20)
     check_clear()
-  elif imagesearch("./exit.png")[0] != -1:
+  elif imagesearch("images/exit.png")[0] != -1:
     global current_xp
     current_xp = current_xp + 15
     xp = str(current_xp)
@@ -26,7 +26,7 @@ def check():
     f.write(logline)
     f.close()
     escaping()
-  elif any(map(lambda name: imagesearch("./" + name + ".png")[0]!=-1,
+  elif any(map(lambda name: imagesearch("images/" + name + ".png")[0]!=-1,
              ("OK", "OK2", "confirm", "close", "play"))):
     print("Passed!")
     global emergency_check
