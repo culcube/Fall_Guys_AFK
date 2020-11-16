@@ -25,7 +25,7 @@ def check():
     global current_xp
     current_xp = current_xp + 15
     xp = str(current_xp)
-    logline = "Round end at " + datetime.now().strftime("%H:%M:%S") + ", xp=" + xp
+    logline = "Round end at " + datetime.now().strftime("%H:%M:%S") + ", xp=" + xp + "\n"
     print(logline)
     f = open("log.txt", "a")
     f.write(logline)
