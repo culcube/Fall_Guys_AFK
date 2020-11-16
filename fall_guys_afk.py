@@ -5,18 +5,23 @@ import os
 import time
 from datetime import datetime
 
+#user defined settings
+starting_xp = 4111
+resolution = "1920x1080"
+
+#setting starting values
+current_xp = starting_xp
 safety_check = 0
 normal_check = 0
 emergency_check = 0
-starting_xp = 4111
-current_xp = starting_xp
+
 
 def check():
-  if imagesearch("images/populating.png")[0] != -1:
+  if imagesearch("images/" + resolution + "/populating.png")[0] != -1:
     print("waiting for show to start")
     time.sleep(20)
     check_clear()
-  elif imagesearch("images/exit.png")[0] != -1:
+  elif imagesearch("images/" + resolution + "/exit.png")[0] != -1:
     global current_xp
     current_xp = current_xp + 15
     xp = str(current_xp)
@@ -26,7 +31,7 @@ def check():
     f.write(logline)
     f.close()
     escaping()
-  elif any(map(lambda name: imagesearch("images/" + name + ".png")[0]!=-1,
+  elif any(map(lambda name: imagesearch("images/" + resolution + "/" + name + ".png")[0]!=-1,
              ("OK", "OK2", "confirm", "close", "play"))):
     print("Passed!")
     global emergency_check
