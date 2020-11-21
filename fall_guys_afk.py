@@ -1,11 +1,11 @@
 ## user defined settings
-starting_xp = 4606
+starting_xp = 13132
 resolution = "1920x1080"
 
 ##########
 
 ### code starts here ###
-import os, time, ctypes
+import time, ctypes
 from python_imagesearch.imagesearch import imagesearch
 from datetime import datetime
 
@@ -68,14 +68,6 @@ def TapEsc():
     time.sleep(.05)
     ReleaseKey(0x01)
 
-## tap relevant key
-def TapKey(key):
-    return {
-        "space":    TapSpace(),
-        "esc":      TapEsc(),
-        "escape":   TapEsc()
-        }.get(key, False)
-
 ## using win32 to get/set cursor position & window, and the handle for the Fall Guys client
 # https://programtalk.com/vs2/python/12682/dragonfly/dragonfly/actions/action_mouse.py/
 # https://docs.microsoft.com/en-us/windows/win32/
@@ -113,7 +105,7 @@ FG_hwnd = ctypes.windll.user32.FindWindowW(None,"FallGuys_client")
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
 def FindImage(name):
-    if not name.endswith(".png"):  name = += ".png"
+    if not name.endswith(".png"):  name += ".png"
     file = "images/" + resolution + "/" + name
     try:
         location = imagesearch(file)
@@ -121,16 +113,21 @@ def FindImage(name):
     except: return False
 
 ## send key to Fall Guys client
-def SendToFG(key):
+def SendToFG(key=None):
     mouse = GetCursor()
     current_hwnd = GetWindow()
     SetWindow(FG_hwnd)
-    TapKey(key)
+    if key == "space":
+        TapSpace()
+    elif key == "esc":
+        TapEsc()
+    else:
+        pass
     SetWindow(current_hwnd)
     SetCursor(mouse[0],mouse[1])
 
 ## Look for image and send key if successful
-def CheckFor(name, key):
+def CheckFor(name, key=None):
     if FindImage(name):
         SendToFG(key)
         return True
@@ -138,8 +135,82 @@ def CheckFor(name, key):
         return False
 
 ## Wait for loop
-def WaitFor(trigger, key, attempts):
-    for attempt in range (0,attempts):
+def WaitFor(trigger, key, attempts, check=None):
+    for attempt in range (attempts):
         if CheckFor(trigger, key):
+            if check != None:
+                for attempt2 in range (attempts):
+                    if CheckFor(trigger):
+                        return True
+                return False
             return True
     return False
+
+
+## Main Loop
+# sub loops
+def Lobby():
+    if WaitFor("lobby","space",10,"mainshow"):
+        return True
+    return False
+
+def Populating():
+    if WaitFor("mainshow",None,100,"populating"):
+        return True
+    return False
+
+def GamePicked():
+    if WaitFor("waiting",None,250,"qualified"):
+        return True
+    return False
+
+def GameStart():
+    if WaitFor("qualified",None,100):
+        return True
+    return False
+
+def RoundOver():
+    if WaitFor("exit","esc",500):
+        return True
+    return False
+
+def ExitShow():
+    if WaitFor("exitshow","space",10):
+        return True
+    return False
+
+def Results():
+    if WaitFor("results","space",10,"lobby"):
+        return True
+    return False
+
+## experience tracking
+current_xp = starting_xp
+def IncrementScore():
+    global current_xp
+    cuurent_xp += 15
+
+while True:
+    if not Lobby():
+        print ("Lobby failed")
+        break
+    if not Populating():
+        print ("Populating failed")
+        break
+    if not GamePicked():
+        print ("GamePicked failed")
+        break
+    if not GameStart():
+        print ("GameStart failed")
+        break
+    if not RoundOver():
+        print ("RoundOver failed")
+        break
+    if not ExitShow():
+        print ("ExitShow failed")
+        break
+    if not Results():
+        print("Results failed")
+        break
+    IncrementScore()
+    print ("current_xp")
