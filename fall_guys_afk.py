@@ -188,14 +188,14 @@ def Results():
 current_xp = starting_xp
 def IncrementScore():
     global current_xp
-    cuurent_xp += 15
+    current_xp += 15
 
 while True:
     if not Lobby():
         print ("Lobby failed")
         break
     if not Populating():
-        print ("Populating failed")
+        print ("Populating failed") 
         break
     if not GamePicked():
         print ("GamePicked failed")
