@@ -10,8 +10,6 @@ Windows
 
 Fall Guys:    https://store.steampowered.com/app/1097150/Fall_Guys_Ultimate_Knockout/
 
-AutoHotKey:   https://www.autohotkey.com/download/ahk-install.exe
-
 python:       https://www.python.org/downloads/windows/
 
 imagesearch:  https://brokencode.io/how-to-easily-image-search-with-python/
