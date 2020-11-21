@@ -135,14 +135,9 @@ def CheckFor(name, key=None):
         return False
 
 ## Wait for loop
-def WaitFor(trigger, key, attempts, check=None):
+def WaitFor(trigger, key, attempts):
     for attempt in range (attempts):
         if CheckFor(trigger, key):
-            if check != None:
-                for attempt2 in range (attempts):
-                    if CheckFor(trigger):
-                        return True
-                return False
             return True
     return False
 
@@ -150,17 +145,17 @@ def WaitFor(trigger, key, attempts, check=None):
 ## Main Loop
 # sub loops
 def Lobby():
-    if WaitFor("lobby","space",10,"mainshow"):
+    if WaitFor("lobby","space",10):
         return True
     return False
 
 def Populating():
-    if WaitFor("mainshow",None,100,"populating"):
+    if WaitFor("mainshow",None,100):
         return True
     return False
 
 def GamePicked():
-    if WaitFor("waiting",None,250,"qualified"):
+    if WaitFor("waiting",None,250):
         return True
     return False
 
@@ -180,7 +175,12 @@ def ExitShow():
     return False
 
 def Results():
-    if WaitFor("results","space",10,"lobby"):
+    if WaitFor("results","space",10):
+        return True
+    return False
+
+def Rewards():
+    if WaitFor("close","space",10):
         return True
     return False
 
@@ -190,27 +190,15 @@ def IncrementScore():
     global current_xp
     current_xp += 15
 
+def DoLoops(*argv):
+    for arg in argv:
+        if not arg():
+            print(arg.__name__ + " failed")
+            return False
+        print(arg.__name__ + " succeeded")
+    return True
+
 while True:
-    if not Lobby():
-        print ("Lobby failed")
-        break
-    if not Populating():
-        print ("Populating failed") 
-        break
-    if not GamePicked():
-        print ("GamePicked failed")
-        break
-    if not GameStart():
-        print ("GameStart failed")
-        break
-    if not RoundOver():
-        print ("RoundOver failed")
-        break
-    if not ExitShow():
-        print ("ExitShow failed")
-        break
-    if not Results():
-        print("Results failed")
-        break
-    IncrementScore()
-    print ("current_xp")
+    if DoLoops(Lobby,Populating,GamePicked,GameStart,RoundOver,ExitShow,Results,Rewards,Results):
+        IncrementScore()
+        print ("current_xp = " + current_xp)
