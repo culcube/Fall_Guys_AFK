@@ -1,4 +1,4 @@
-
+#! /usr/bin/python
 # https://brokencode.io/how-to-easily-image-search-with-python/
 from python_imagesearch.imagesearch import imagesearch
 import os
