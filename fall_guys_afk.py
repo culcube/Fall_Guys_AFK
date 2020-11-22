@@ -1,5 +1,5 @@
 ## user defined settings
-starting_xp = 13222
+starting_xp = 13267
 resolution = "1920x1080"
 
 ##########
@@ -178,9 +178,8 @@ def Results():
     return False
 
 def Rewards():
-    if WaitFor("close","space",10):
-        return True
-    return False
+    WaitFor("close","space",10)
+    return True
 
 def Confirm():
     if WaitFor("confirm","space",10):
@@ -189,10 +188,10 @@ def Confirm():
 
 ## logger
 def Logger(logline):
-    logline += " at "+ datetime.now().strftime("%H:%M:%S") + "\n"
+    logline += " at "+ datetime.now().strftime("%H:%M:%S")
     print(logline)
     f = open("log.txt", "a")
-    f.write(logline)
+    f.write(logline + "\n")
     f.close()
 
 ## experience tracking
@@ -215,7 +214,7 @@ def DoLoops(*argv):
 while True:
     if DoLoops(Lobby,Populating,GamePicked,GameStart,RoundOver,ExitShow,Results,Rewards,Confirm):
         IncrementScore()
-        Logger("current_xp = " + current_xp)
+        Logger("current_xp = " + str(current_xp))
         if current_xp > 40000:
             break
     else:
