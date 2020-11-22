@@ -1,5 +1,5 @@
 ## user defined settings
-starting_xp = 13132
+starting_xp = 13222
 resolution = "1920x1080"
 
 ##########
@@ -141,9 +141,7 @@ def WaitFor(trigger, key, attempts):
             return True
     return False
 
-
-## Main Loop
-# sub loops
+## sub loops
 def Lobby():
     if WaitFor("lobby","space",10):
         return True
@@ -184,21 +182,41 @@ def Rewards():
         return True
     return False
 
+def Confirm():
+    if WaitFor("confirm","space",10):
+        return True
+    return False
+
+## logger
+def Logger(logline):
+    logline += " at "+ datetime.now().strftime("%H:%M:%S") + "\n"
+    print(logline)
+    f = open("log.txt", "a")
+    f.write(logline)
+    f.close()
+
 ## experience tracking
 current_xp = starting_xp
 def IncrementScore():
     global current_xp
     current_xp += 15
 
+## main loop
+# iterator
 def DoLoops(*argv):
     for arg in argv:
         if not arg():
-            print(arg.__name__ + " failed")
+            Logger(arg.__name__ + " failed")
             return False
-        print(arg.__name__ + " succeeded")
+        Logger(arg.__name__ + " succeeded")
     return True
 
+# loop
 while True:
-    if DoLoops(Lobby,Populating,GamePicked,GameStart,RoundOver,ExitShow,Results,Rewards,Results):
+    if DoLoops(Lobby,Populating,GamePicked,GameStart,RoundOver,ExitShow,Results,Rewards,Confirm):
         IncrementScore()
-        print ("current_xp = " + current_xp)
+        Logger("current_xp = " + current_xp)
+        if current_xp > 40000:
+            break
+    else:
+        break
