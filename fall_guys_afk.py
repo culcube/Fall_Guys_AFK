@@ -1,5 +1,5 @@
 ## user defined settings
-starting_xp = 13267
+starting_xp = 13372
 resolution = "1920x1080"
 
 ##########
@@ -142,53 +142,23 @@ def WaitFor(trigger, key, attempts):
     return False
 
 ## sub loops
-def Lobby():
-    if WaitFor("lobby","space",10):
-        return True
-    return False
-
-def Populating():
-    if WaitFor("mainshow",None,100):
-        return True
-    return False
-
-def GamePicked():
-    if WaitFor("waiting",None,250):
-        return True
-    return False
-
-def GameStart():
-    if WaitFor("qualified",None,100):
-        return True
-    return False
-
-def RoundOver():
-    if WaitFor("exit","esc",500):
-        return True
-    return False
-
-def ExitShow():
-    if WaitFor("exitshow","space",10):
-        return True
-    return False
-
-def Results():
-    if WaitFor("results","space",10):
-        return True
-    return False
-
-def Rewards():
-    WaitFor("close","space",10)
-    return True
-
-def Confirm():
-    if WaitFor("confirm","space",10):
-        return True
-    return False
+sub_loops = [
+    ("lobby","space",10),
+    ("mainshow",None,100),
+    ("populating",None,250),
+    ("waiting",None,500),
+    ("qualified",None,250),
+    ("exit","esc",2500),
+    ("exitshow","space",10),
+    ("results","space",10),
+    ("close","space",10),
+    ("confirm","space",10)
+    ]
 
 ## logger
-def Logger(logline):
-    logline += " at "+ datetime.now().strftime("%H:%M:%S")
+def Logger(logtext):
+    logline = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " - "
+    logline += logtext
     print(logline)
     f = open("log.txt", "a")
     f.write(logline + "\n")
@@ -202,20 +172,28 @@ def IncrementScore():
 
 ## main loop
 # iterator
-def DoLoops(*argv):
-    for arg in argv:
-        if not arg():
-            Logger(arg.__name__ + " failed")
-            return False
-        Logger(arg.__name__ + " succeeded")
-    return True
+def DoLoops():
+    for trigger, key, attempts in sub_loops:
+        Logger("Checking for " + str(trigger))
+        check = "Check for " + str(trigger)
+        if not WaitFor(trigger, key, attempts):
+            Logger(check + " failed")
+            if trigger == "populating":
+                Logger("Checking for connection error")
+                if WaitFor("connectionerror","space",10):
+                    TapEsc
+                    time.sleep(1)
+                    TapSpace
+                    break
+                break
+        else:
+            Logger(check + " succeeded")
+            if trigger == "confirm":
+                IncrementScore()
+                Logger("current_xp = " + str(current_xp))
 
 # loop
 while True:
-    if DoLoops(Lobby,Populating,GamePicked,GameStart,RoundOver,ExitShow,Results,Rewards,Confirm):
-        IncrementScore()
-        Logger("current_xp = " + str(current_xp))
-        if current_xp > 40000:
-            break
-    else:
+    DoLoops()
+    if current_xp > 40000:
         break
