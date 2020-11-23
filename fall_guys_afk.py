@@ -1,6 +1,5 @@
 ## user defined settings
-starting_xp = 13372
-resolution = "1920x1080"
+# put starting_xp in a plain text file called: fg_xp
 
 ##########
 
@@ -102,6 +101,23 @@ def SetWindow(hwnd):
 ## get the handle for the Fall Guys client window
 FG_hwnd = ctypes.windll.user32.FindWindowW(None,"FallGuys_client")
 
+## get the resolution
+resolution = ctypes.wintypes.RECT()
+ctypes.windll.user32.GetWindowRect(FG_hwnd, ctypes.pointer(resolution))
+# if windowed there are 8 pixels at each edge for border plus a further 23 pixels for the window title
+# screens are a multiple of 10 pixels
+win_height = resolution.bottom - resolution.top
+win_width = resolution.right - resolution.left
+# quick & dirty check to see if running in a window or full screen
+# screens are always a multiple of 10 pixels tall, but if windowed we need to remove the borders
+# if windowed there are 8 pixels at each edge for border
+# plus a further 23 pixels for the window title
+if win_height % 10 != 0:
+    win_height -= 39
+    win_width -= 16
+resolution = str(win_width) + "x" + str(win_height)
+
+
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
 def FindImage(name):
@@ -121,6 +137,12 @@ def SendToFG(key=None):
         TapSpace()
     elif key == "esc":
         TapEsc()
+    elif key == "special":
+        TapSpace()
+        time.sleep(1)
+        TapEsc()
+        time.sleep(1)
+        TapSpace()
     else:
         pass
     SetWindow(current_hwnd)
@@ -136,9 +158,30 @@ def CheckFor(name, key=None):
 
 ## Wait for loop
 def WaitFor(trigger, key, attempts):
+    Logger("Checking for " + str(trigger))
     for attempt in range (attempts):
+        check = "Check for " + str(trigger)
         if CheckFor(trigger, key):
+            Logger(check + " succeeded")
+            if trigger == "confirm":
+                IncrementScore()
             return True
+        else:
+            CheckFor("options", "escape")
+            if trigger in ("populating","waiting"):
+                if CheckFor("connectionerror", "special"):
+                    Logger(check + " failed - Connection Error")
+                    return True
+                if CheckFor("nomatchfound", "special"):
+                    Logger(check + " failed - No Match Found")
+                    return True
+            if trigger == "exitshow":
+                if CheckFor("genericok", "space"):
+                    return True
+            if trigger == "confirm":
+                if CheckFor("close", "space"):
+                    Logger(check + " failed - closing level up screen")
+    Logger(check + " failed - aborting")
     return False
 
 ## sub loops
@@ -146,18 +189,24 @@ sub_loops = [
     ("lobby","space",10),
     ("mainshow",None,100),
     ("populating",None,250),
-    ("waiting",None,500),
-    ("qualified",None,250),
+    ("waiting",None,1000),
+    ("qualified",None,500),
     ("exit","esc",2500),
-    ("exitshow","space",10),
-    ("results","space",10),
-    ("close","space",10),
-    ("confirm","space",10)
+    ("exitshow","space",100),
+    ("results","space",100),
+    ("confirm","space",100)
     ]
 
 ## logger
-def Logger(logtext):
-    logline = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " - "
+def Logger(logtext, type="basic"):
+    date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if type == "xp":
+        with open("xp.csv", "a") as x:
+            x.write(date_time + "," + logtext + "\n")
+        with open("fg_xp", "w") as l:
+            l.write(logtext)
+        logtext = "current xp = " + logtext
+    logline = date_time + " - "
     logline += logtext
     print(logline)
     f = open("log.txt", "a")
@@ -165,35 +214,37 @@ def Logger(logtext):
     f.close()
 
 ## experience tracking
-current_xp = starting_xp
+try:
+    with open("fg_xp") as f:
+        current_xp = int(f.read())
+except:
+    current_xp = 0
+
 def IncrementScore():
     global current_xp
     current_xp += 15
+    Logger(str(current_xp),"xp")
 
 ## main loop
 # iterator
-def DoLoops():
+def DoLoops(type="normal"):
+    if type == "emergency":
+        number = 1
     for trigger, key, attempts in sub_loops:
-        Logger("Checking for " + str(trigger))
-        check = "Check for " + str(trigger)
-        if not WaitFor(trigger, key, attempts):
-            Logger(check + " failed")
-            if trigger == "populating":
-                Logger("Checking for connection error")
-                if WaitFor("connectionerror","space",10):
-                    TapEsc
-                    time.sleep(1)
-                    TapSpace
-                    break
-                break
+        if type == "emergency":
+            number = 1
+            WaitFor(trigger, key, number)
         else:
-            Logger(check + " succeeded")
-            if trigger == "confirm":
-                IncrementScore()
-                Logger("current_xp = " + str(current_xp))
+            number = attempts
+            if WaitFor(trigger, key, number) is False:
+                return False
+    return True
 
 # loop
+Logger(str(current_xp),"xp")
 while True:
-    DoLoops()
+    if DoLoops() is False:
+        Logger("check failed - emergency checking")
+        DoLoops("emergency")
     if current_xp > 40000:
-        break
+         break
