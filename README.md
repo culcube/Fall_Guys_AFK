@@ -19,7 +19,7 @@ these files:  https://github.com/culcube/Fall_Guys_AFK
 
 Set your starting exp in a file called: fg_xp
 
-If you do not do this it will assume your starting xp is 0 - chnages are logged and the xp is only used to stop the afk script once you hit 40,000, i.e. level 40
+If you do not do this it will assume your starting xp is 0 - chnages are logged and the xp is only used to stop the afk script once you hit 26,000, i.e. level 40 (Season 2)
 
 run it in a terminal:
   python ./fall_guys_afk.py
