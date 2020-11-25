@@ -1,5 +1,7 @@
 ## user defined settings
 # put starting_xp in a plain text file called: fg_xp
+# set max xp for season
+max_xp = 26000
 
 ##########
 
@@ -139,9 +141,9 @@ def SendToFG(key=None):
         TapEsc()
     elif key == "special":
         TapSpace()
-        time.sleep(1)
+        time.sleep(0.5)
         TapEsc()
-        time.sleep(1)
+        time.sleep(0.5)
         TapSpace()
     else:
         pass
@@ -191,8 +193,8 @@ sub_loops = [
     ("populating",None,250),
     ("waiting",None,1000),
     ("qualified",None,500),
-    ("exit","esc",2500),
-    ("exitshow","space",100),
+    ("exit","special",2500),
+    ("exitshow","space",10),
     ("results","space",100),
     ("confirm","space",100)
     ]
@@ -222,7 +224,8 @@ except:
 
 def IncrementScore():
     global current_xp
-    current_xp += 15
+    if current_xp < max_xp:
+        current_xp += 15
     Logger(str(current_xp),"xp")
 
 ## main loop
@@ -246,5 +249,5 @@ while True:
     if DoLoops() is False:
         Logger("check failed - emergency checking")
         DoLoops("emergency")
-    if current_xp > 40000:
+    if current_xp > max_xp:
          break
