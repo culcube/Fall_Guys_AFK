@@ -13,9 +13,13 @@ Fall Guys:    https://store.steampowered.com/app/1097150/Fall_Guys_Ultimate_Knoc
 
 python:       https://www.python.org/downloads/windows/
 
+the script: fall_guys_afk.py
+
+You can also get the following, but the script will obtain them if you dont):
+
 imagesearch:  https://brokencode.io/how-to-easily-image-search-with-python/
 
-these files:  https://github.com/culcube/Fall_Guys_AFK
+all the files keeping the same directory structure:  https://github.com/culcube/Fall_Guys_AFK
 
 run it in a terminal:
   python ./fall_guys_afk.py
