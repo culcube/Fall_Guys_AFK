@@ -1,5 +1,12 @@
+## Setting user-controlled global values
+## only change if necessary
+# location of Repo
 RepoURL = "http://github.com/culcube/Fall_Guys_AFK/"
 RepoBranch = "main"
+# How many seconds before printing the same check
+SilenceTime = 60
+# How many periods of silence before aborting
+AbortCounter = 3
 
 ## Imports
 import ctypes, shutil, subprocess, time
@@ -13,6 +20,15 @@ except:
     import sys
     subprocess.check_call([sys.executable, "-m", "pip", "install", "python-imagesearch"])
     from python_imagesearch.imagesearch import imagesearch
+
+## Setting global values not to be changed
+# setting a counter for checks
+CheckCounter = 0
+# set objects for use in functions
+SendInput = ctypes.windll.user32.SendInput
+SpaceKey = 0x39
+EscKey = 0x01
+resolution = None
 
 ## using python to send keypresses
 # as per EDIT2 https://www.reddit.com/r/learnpython/comments/22tke1/use_python_to_send_keystrokes_to_games_in_windows/
@@ -65,11 +81,6 @@ def Tap(Key):
     PressKey(Key)
     time.sleep(0.5)
     ReleaseKey(Key)
-
-# set some objects
-SendInput = ctypes.windll.user32.SendInput
-SpaceKey = 0x39
-EscKey = 0x01
 
 ## using win32 to get/set cursor position & window
 # https://programtalk.com/vs2/python/12682/dragonfly/dragonfly/actions/action_mouse.py/
@@ -211,14 +222,6 @@ Checks = [
     {"check": "confirm",
      "key": SpaceKey}
     ]
-
-## Setting global values
-# setting a counter for checks
-CheckCounter = 0
-# How many seconds before printing the same check
-SilenceTime = 60
-# How many periods of silence before aborting
-AbortCounter = 3
 
 ## main loop
 # iterator
