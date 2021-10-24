@@ -143,18 +143,17 @@ def GetResolution():
     return resolution
 
 ## ensure we have the necessary images
-ImageFolder = Path('images/'+GetResolution())
+ImageFolder = 'images/'+GetResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
 
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
 def FindImage(name):
     if not name.endswith(".png"):  name += ".png"
-    file = "images/" + resolution + "/" + name
+    file = ImageFolder + name
     try:
         location = imagesearch(file)
         return location if location[0] != -1 else False
-    
     except: return False
 
 ## Look for image (and send key if successful)
