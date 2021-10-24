@@ -140,7 +140,7 @@ if not (FG_hwnd):
     StartFallGuys()
 
 ## get the resolution
-def GetResolution():
+def GetFGResolution():
     global resolution
     if not resolution:
         ResolutionObject = ctypes.wintypes.RECT()
@@ -154,11 +154,11 @@ def GetResolution():
         if height % 10 != 0:
             height -= 39
             width -= 16
-        resolution = str(win_width) + "x" + str(win_height)
+        resolution = str(width) + "x" + str(height)
     return resolution
 
 ## ensure we have the necessary images for the resolution and dowload from repo as necessary
-ImageFolder = 'images/'+GetResolution()+'/'
+ImageFolder = 'images/'+GetFGResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
 if not RepoBranch.endswith("/"):  name += "/"
 RepoImageFolder = RepoURL + "tree/" + RepoBranch + ImageFolder
