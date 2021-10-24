@@ -1,7 +1,11 @@
+RepoURL = "http://github.com/culcube/Fall_Guys_AFK/"
+RepoBranch = "main"
+
 ## Imports
-import time, ctypes, subprocess
+import ctypes, shutil, subprocess, time
 from datetime import datetime
 from pathlib import Path
+from urllib import request
 ### code requires image-search ###
 try:
     from python_imagesearch.imagesearch import imagesearch
@@ -142,9 +146,22 @@ def GetResolution():
         resolution = str(win_width) + "x" + str(win_height)
     return resolution
 
-## ensure we have the necessary images
+## ensure we have the necessary images for the resolution and dowload from repo as necessary
 ImageFolder = 'images/'+GetResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
+if not RepoBranch.endswith("/"):  name += "/"
+RepoImageFolder = RepoURL + "tree/" + RepoBranch + ImageFolder
+RepoImageFolderScrape = request.urlopen(RepoImageFolder).readlines()
+for line in RepoImageFolderScrape:
+    html = str(line)
+    if ImageFolder in html:
+        array = html.split('"')
+        filename = array[5]
+        if not Path(ImageFolder + filename).exists():
+            RepoImageFile = RepoURL + "raw/" + RepoBranch + ImageFolder + filename
+            LocalFile = ImageFolder + filename
+            with urllib.request.urlopen(RepoImageFile) as response, open(LocalFile, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
 
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
