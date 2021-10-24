@@ -1,14 +1,13 @@
-## user defined settings
-# put starting_xp in a plain text file called: fg_xp
-# set max xp for season
-max_xp = 26000
-
-##########
-
-### code starts here ###
-import time, ctypes
-from python_imagesearch.imagesearch import imagesearch
+## Imports
+import time, ctypes, subprocess
 from datetime import datetime
+### code requires image-search ###
+try:
+    from python_imagesearch.imagesearch import imagesearch
+except:
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "python-imagesearch"])
+    from python_imagesearch.imagesearch import imagesearch
 
 ## using python to send keypresses
 # as per EDIT2 https://www.reddit.com/r/learnpython/comments/22tke1/use_python_to_send_keystrokes_to_games_in_windows/
@@ -43,8 +42,6 @@ class Input(ctypes.Structure):
     _fields_ = [("type", ctypes.c_ulong),
                 ("ii", Input_I)]
 
-SendInput = ctypes.windll.user32.SendInput
-
 def PressKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = Input_I()
@@ -59,20 +56,19 @@ def ReleaseKey(hexKeyCode):
     x = Input( ctypes.c_ulong(1), ii_ )
     ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
-def TapSpace():
-    PressKey(0x39)
-    time.sleep(.05)
-    ReleaseKey(0x39)
+def Tap(Key):
+    PressKey(Key)
+    time.sleep(0.5)
+    ReleaseKey(Key)
 
-def TapEsc():
-    PressKey(0x01)
-    time.sleep(.05)
-    ReleaseKey(0x01)
+# set some objects
+SendInput = ctypes.windll.user32.SendInput
+SpaceKey = 0x39
+EscKey = 0x01
 
-## using win32 to get/set cursor position & window, and the handle for the Fall Guys client
+## using win32 to get/set cursor position & window
 # https://programtalk.com/vs2/python/12682/dragonfly/dragonfly/actions/action_mouse.py/
 # https://docs.microsoft.com/en-us/windows/win32/
-
 class _point_t(ctypes.Structure):
     _fields_ = [
                 ('x',  ctypes.c_long),
@@ -84,7 +80,7 @@ def GetCursor():
     cursor = ctypes.windll.user32.GetCursorPos(ctypes.pointer(point))
     if cursor:  return (point.x, point.y)
     else:       return None
- 
+
 def SetCursor(x, y):
     result = ctypes.windll.user32.SetCursorPos(ctypes.c_long(int(x)), ctypes.c_long(int(y)))
     if result:  return False
@@ -100,8 +96,32 @@ def SetWindow(hwnd):
         if ctypes.windll.user32.SetForegroundWindow(hwnd):
             break
 
+## send key to Fall Guys client and reset window + mouse cursor
+def SendToFG(key=None):
+    mouse = GetCursor()
+    current_hwnd = GetWindow()
+    SetWindow(FG_hwnd)
+    Tap(key)
+    SetWindow(current_hwnd)
+    SetCursor(mouse[0],mouse[1])
+
+## start FG from Steam folder
+def StartFallGuys():
+    global FG_hwnd
+    subprocess.call(['C:\Program Files (x86)\Steam\steamapps\common\Fall Guys\FallGuys_client_game.exe'])
+    while (FG_hwnd == 0):
+        FG_hwnd = ctypes.windll.user32.FindWindowW(None,"FallGuys_client")
+    time.sleep(15)
+    SendToFG(SpaceKey)
+
 ## get the handle for the Fall Guys client window
-FG_hwnd = ctypes.windll.user32.FindWindowW(None,"FallGuys_client")
+try:
+    FG_hwnd = ctypes.windll.user32.FindWindowW(None,"FallGuys_client")
+except:
+    StartFallGuys()
+
+if not (FG_hwnd):
+    StartFallGuys()
 
 ## get the resolution
 resolution = ctypes.wintypes.RECT()
@@ -117,8 +137,8 @@ win_width = resolution.right - resolution.left
 if win_height % 10 != 0:
     win_height -= 39
     win_width -= 16
-resolution = str(win_width) + "x" + str(win_height)
 
+resolution = str(win_width) + "x" + str(win_height)
 
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
@@ -130,124 +150,93 @@ def FindImage(name):
         return location if location[0] != -1 else False
     except: return False
 
-## send key to Fall Guys client
-def SendToFG(key=None):
-    mouse = GetCursor()
-    current_hwnd = GetWindow()
-    SetWindow(FG_hwnd)
-    if key == "space":
-        TapSpace()
-    elif key == "esc":
-        TapEsc()
-    elif key == "special":
-        TapSpace()
-        time.sleep(0.5)
-        TapEsc()
-        time.sleep(0.5)
-        TapSpace()
-    else:
-        pass
-    SetWindow(current_hwnd)
-    SetCursor(mouse[0],mouse[1])
-
-## Look for image and send key if successful
+## Look for image (and send key if successful)
 def CheckFor(name, key=None):
     if FindImage(name):
-        SendToFG(key)
+        print("check", name, "succeeded at", datetime.now())
+        if (key):
+            SendToFG(key)
+            print("sent", key, "at", datetime.now())
+        global CheckCounter
+        CheckCounter += 2
         return True
     else:
         return False
 
-## Wait for loop
-def WaitFor(trigger, key, attempts):
-    Logger("Checking for " + str(trigger))
-    for attempt in range (attempts):
-        check = "Check for " + str(trigger)
-        if CheckFor(trigger, key):
-            Logger(check + " succeeded")
-            if trigger == "confirm":
-                IncrementScore()
-            return True
-        else:
-            CheckFor("options", "escape")
-            if trigger in ("populating","waiting"):
-                if CheckFor("connectionerror", "special"):
-                    Logger(check + " failed - Connection Error")
-                    return True
-                if CheckFor("nomatchfound", "special"):
-                    Logger(check + " failed - No Match Found")
-                    return True
-            if trigger == "exitshow":
-                if CheckFor("genericok", "space"):
-                    return True
-            if trigger == "confirm":
-                if CheckFor("close", "space"):
-                    Logger(check + " failed - closing level up screen")
-    Logger(check + " failed - aborting")
-    return False
-
 ## sub loops
-sub_loops = [
-    ("lobby","space",10),
-    ("mainshow",None,100),
-    ("populating",None,250),
-    ("waiting",None,1000),
-    ("qualified",None,500),
-    ("exit","special",2500),
-    ("exitshow","space",10),
-    ("results","space",100),
-    ("confirm","space",100)
+Checks = [
+    {"check": "mainshow",
+     "key": SpaceKey},
+    {"check": "lookingfor",
+     "key": None},
+    {"check": "populating",
+     "key": None},
+    {"check": "waitingforplayers",
+     "key": None},
+    {"check": "qualified",
+     "key": None},
+    {"check": "eliminated",
+     "key": None},
+    {"check": "exit",
+     "key": EscKey},
+    {"check": "exitshow",
+     "key": SpaceKey},
+    {"check": "showsummary",
+     "key": None},
+    {"check": "close",
+     "key": SpaceKey},
+    {"check": "confirm",
+     "key": SpaceKey}
     ]
 
-## logger
-def Logger(logtext, type="basic"):
-    date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    if type == "xp":
-        with open("xp.csv", "a") as x:
-            x.write(date_time + "," + logtext + "\n")
-        with open("fg_xp", "w") as l:
-            l.write(logtext)
-        logtext = "current xp = " + logtext
-    logline = date_time + " - "
-    logline += logtext
-    print(logline)
-    f = open("log.txt", "a")
-    f.write(logline + "\n")
-    f.close()
-
-## experience tracking
-try:
-    with open("fg_xp") as f:
-        current_xp = int(f.read())
-except:
-    current_xp = 0
-
-def IncrementScore():
-    global current_xp
-    if current_xp < max_xp:
-        current_xp += 15
-    Logger(str(current_xp),"xp")
+## Setting global values
+# setting a counter for checks
+CheckCounter = 0
+# How many seconds before printing the same check
+SilenceTime = 60
+# How many periods of silence before aborting
+AbortCounter = 3
 
 ## main loop
 # iterator
-def DoLoops(type="normal"):
-    if type == "emergency":
-        number = 1
-    for trigger, key, attempts in sub_loops:
-        if type == "emergency":
-            number = 1
-            WaitFor(trigger, key, number)
+def DoLoops():
+    global CheckCounter
+    if CheckCounter >= len(Checks):
+        print("-=- Looping check reset at", datetime.now(), "-=-")
+        CheckCounter = CheckCounter - len(Checks)
+    CurrentCheck = Checks[CheckCounter]
+    # We need to always be ready to see the next image, which requires us to start back at 0 when looking for the last image
+    if CheckCounter == len(Checks)-1:
+        NextCheck = Checks[0]
+    else:
+        NextCheck = Checks[CheckCounter+1]
+    SilenceStart = time.time()
+    Silenced = False
+    AbortCheck = 0
+    while not (CheckFor(NextCheck["check"], NextCheck["key"])):
+        Checktime = time.time()
+        TimeElapsed = Checktime - SilenceStart
+        if TimeElapsed > SilenceTime:
+            AbortCheck += AbortCheck
+            if AbortCheck < AbortCounter:
+                Silenced = False
+                SilenceStart = time.time()
+                print("still", end=" ")
+            else:
+                print("Aborting currect check by pressing Esc at", datetime.now())
+                SendToFG(EscKey)
+                # Find the first check that is expected after we press an Escape Key
+                CheckCounter = Checks.index(next(x for x in Checks if x['key'] == EscKey)) + 1
+                break
         else:
-            number = attempts
-            if WaitFor(trigger, key, number) is False:
-                return False
-    return True
+            if not Silenced:
+                print("checking for:", CurrentCheck["check"], "at", datetime.now())
+                Silenced = True
+        if CheckFor(CurrentCheck["check"], CurrentCheck["key"]):
+            CheckCounter -= 1
+            break
 
-# loop
-Logger(str(current_xp),"xp")
+
+print("Looper started at", datetime.now())
 while True:
-    if DoLoops() is False:
-        Logger("check failed - emergency checking")
-        DoLoops("emergency")
-    if current_xp > max_xp:
-         break
+    DoLoops()
