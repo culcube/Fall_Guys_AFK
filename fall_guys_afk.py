@@ -146,10 +146,15 @@ def GetResolution():
         resolution = str(win_width) + "x" + str(win_height)
     return resolution
 
+## tiny function to check strings are in expected format
+def CheckStringEnding(string, endswith):
+    if not string.endswith(endswith): string += endswith
+    return string
+
 ## ensure we have the necessary images for the resolution and dowload from repo as necessary
 ImageFolder = 'images/'+GetResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
-if not RepoBranch.endswith("/"):  name += "/"
+CheckStringEnding(RepoBranch,"/")
 RepoImageFolder = RepoURL + "tree/" + RepoBranch + ImageFolder
 RepoImageFolderScrape = request.urlopen(RepoImageFolder).readlines()
 for line in RepoImageFolderScrape:
@@ -166,7 +171,7 @@ for line in RepoImageFolderScrape:
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
 def FindImage(name):
-    if not name.endswith(".png"):  name += ".png"
+    CheckStringEnding(name,".png")
     file = ImageFolder + name
     try:
         location = imagesearch(file)
