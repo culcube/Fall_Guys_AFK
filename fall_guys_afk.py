@@ -1,6 +1,7 @@
 ## Imports
 import time, ctypes, subprocess
 from datetime import datetime
+from pathlib import Path
 ### code requires image-search ###
 try:
     from python_imagesearch.imagesearch import imagesearch
@@ -124,21 +125,26 @@ if not (FG_hwnd):
     StartFallGuys()
 
 ## get the resolution
-resolution = ctypes.wintypes.RECT()
-ctypes.windll.user32.GetWindowRect(FG_hwnd, ctypes.pointer(resolution))
-# if windowed there are 8 pixels at each edge for border plus a further 23 pixels for the window title
-# screens are a multiple of 10 pixels
-win_height = resolution.bottom - resolution.top
-win_width = resolution.right - resolution.left
-# quick & dirty check to see if running in a window or full screen
-# screens are always a multiple of 10 pixels tall, but if windowed we need to remove the borders
-# if windowed there are 8 pixels at each edge for border
-# plus a further 23 pixels for the window title
-if win_height % 10 != 0:
-    win_height -= 39
-    win_width -= 16
+def GetResolution():
+    global resolution
+    if not resolution:
+        ResolutionObject = ctypes.wintypes.RECT()
+        ctypes.windll.user32.GetWindowRect(FG_hwnd, ctypes.pointer(ResolutionObject))
+        height = ResolutionObject.bottom - ResolutionObject.top
+        width = ResolutionObject.right - ResolutionObject.left
+        # quick & dirty way to remove windowed borders.
+        # screens are always a multiple of 10 pixels tall, but if windowed we need to remove the borders
+        # if windowed there are 8 pixels at each edge for border
+        # plus a further 23 pixels for the window title
+        if height % 10 != 0:
+            height -= 39
+            width -= 16
+        resolution = str(win_width) + "x" + str(win_height)
+    return resolution
 
-resolution = str(win_width) + "x" + str(win_height)
+## ensure we have the necessary images
+ImageFolder = Path('images/'+GetResolution())
+Path(ImageFolder).mkdir(parents=True, exist_ok=True)
 
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
 # https://brokencode.io/how-to-easily-image-search-with-python/
@@ -148,6 +154,7 @@ def FindImage(name):
     try:
         location = imagesearch(file)
         return location if location[0] != -1 else False
+    
     except: return False
 
 ## Look for image (and send key if successful)
