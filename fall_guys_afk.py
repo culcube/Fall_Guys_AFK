@@ -171,7 +171,7 @@ for line in RepoImageFolderScrape:
         if not Path(ImageFolder + filename).exists():
             RepoImageFile = RepoURL + "raw/" + RepoBranch + ImageFolder + filename
             LocalFile = ImageFolder + filename
-            with urllib.request.urlopen(RepoImageFile) as response, open(LocalFile, 'wb') as out_file:
+            with request.urlopen(RepoImageFile) as response, open(LocalFile, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
 
 ## use imagesearch to find image called name, can fail if file doesn't exist, or if image isn't found
