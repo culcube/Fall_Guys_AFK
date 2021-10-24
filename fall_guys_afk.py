@@ -160,7 +160,7 @@ def GetFGResolution():
 ## ensure we have the necessary images for the resolution and dowload from repo as necessary
 ImageFolder = 'images/'+GetFGResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
-if not RepoBranch.endswith("/"):  name += "/"
+if not RepoBranch.endswith("/"):  RepoBranch += "/"
 RepoImageFolder = RepoURL + "tree/" + RepoBranch + ImageFolder
 RepoImageFolderScrape = request.urlopen(RepoImageFolder).readlines()
 for line in RepoImageFolderScrape:
