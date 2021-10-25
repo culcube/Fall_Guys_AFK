@@ -161,6 +161,7 @@ def GetFGResolution():
 ImageFolder = 'images/'+GetFGResolution()+'/'
 Path(ImageFolder).mkdir(parents=True, exist_ok=True)
 if not RepoBranch.endswith("/"):  RepoBranch += "/"
+    
 RepoImageFolder = RepoURL + "tree/" + RepoBranch + ImageFolder
 RepoImageFolderScrape = request.urlopen(RepoImageFolder).readlines()
 for line in RepoImageFolderScrape:
@@ -178,6 +179,7 @@ for line in RepoImageFolderScrape:
 # https://brokencode.io/how-to-easily-image-search-with-python/
 def FindImage(name):
     if not name.endswith(".png"):  name += ".png"
+        
     file = ImageFolder + name
     try:
         location = imagesearch(file)
