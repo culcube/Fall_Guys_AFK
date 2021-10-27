@@ -229,6 +229,7 @@ Checks = [
 # iterator
 def DoLoops():
     global CheckCounter
+    global AbortCounter
     if CheckCounter >= len(Checks):
         print("-=- Looping check reset at", datetime.now(), "-=-")
         CheckCounter = CheckCounter - len(Checks)
