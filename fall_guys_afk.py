@@ -229,7 +229,6 @@ Checks = [
 # iterator
 def DoLoops():
     global CheckCounter
-    global AbortCounter
     if CheckCounter >= len(Checks):
         print("-=- Looping check reset at", datetime.now(), "-=-")
         CheckCounter = CheckCounter - len(Checks)
@@ -247,6 +246,7 @@ def DoLoops():
         TimeElapsed = Checktime - SilenceStart
         if TimeElapsed > SilenceTime:
             AbortCheck += AbortCheck
+            global AbortCounter
             if AbortCheck < AbortCounter:
                 Silenced = False
                 SilenceStart = time.time()
